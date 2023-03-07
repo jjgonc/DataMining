@@ -1,11 +1,11 @@
-Nome,Laboratórios, Alg. Avançados, Biologia Sistemas
-João,12,16,17
-Carla,17,16,
-Sónia,000,18,18
-Pedro,16,000,18
-José,14,17,12
-Carina,19,18,20
-Telma,16,14,12
-Joaquim,000,15,12
-Ricardo,15,15,14
-Vanda,16,15,18
+Nome,Laboratórios, Alg. Avançados, Biologia Sistemas,NotaFinal
+João,12.0,16.0,17.0,15
+Carla,17.0,16.0,15.7,17
+Sónia,15.6,18.0,18.0,18
+Pedro,16.0,16.0,18.0,17
+José,14.0,17.0,12.0,14
+Carina,19.0,18.0,20.0,19
+Telma,16.0,14.0,12.0,14
+Joaquim,15.6,15.0,12.0,14
+Ricardo,15.0,15.0,14.0,15
+Vanda,16.0,15.0,18.0,16
