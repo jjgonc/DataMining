@@ -16,7 +16,7 @@ class Dataset:
     def getY(self):
         return self.y
     
-    def getFeatureNames(self, filename):
+    def getFeatureNames(self):
         return self.feature_names
         
     def getLabelNames(self):
@@ -35,25 +35,20 @@ class Dataset:
         self.label_names = label_names
 
     def readDataset(self, filename, sep = ','):
-        # data = np.loadtxt(filename, delimiter = sep, dtype=str)
         data = np.genfromtxt(filename, delimiter=',', skip_header=1, dtype='str')
         features = np.genfromtxt(filename, delimiter=',', max_rows=1, dtype='str')
         self.x = data[:, :-1]    # all rows, all columns except the last one
         self.y = data[:, -1]     # all rows, only the last column
-        self.feature_names = features
-        # data = pd.read_csv(filename)
-        # self.x = data.iloc[:, :-1].values
-        # self.y = data.iloc[:, -1].values
+        self.feature_names = features[:-(len(self.label_names))]
+        self.label_names = features[-(len(self.label_names)) : ]
 
     def writeDataset(self, filename, sep = ","):
         fullds = np.hstack( (self.x, self.y.reshape(len(self.y),1)))
-        fullds = np.vstack( (self.feature_names, fullds))
-        # pd.DataFrame(fullds).to_csv(filename, header=False, index=False)
+        fullds = np.vstack( (np.append(self.feature_names, self.label_names), fullds))
         np.savetxt(filename, fullds, fmt="%s", delimiter=',')
 
     def nullCount(self):
         return np.sum(np.char.strip(self.x) == '') + np.sum(np.char.strip(self.y) == '')
-        # return np.count_nonzero(np.isnan(self.x))
 
     def substituteNullWithMean(self):
         data = self.x
@@ -77,7 +72,7 @@ class Dataset:
 
 
 if __name__ == "__main__":
-    ds = Dataset()
+    ds = Dataset(label_names=["NotaFinal"])
     ds.readDataset("notas.csv")
     print("Dataset lido com sucesso!")
 
