@@ -1,6 +1,5 @@
 import numpy as np
 from typing import Callable
-import f_classif
 import sys
 sys.path.append('../TPC1')
 from tpc1 import Dataset
