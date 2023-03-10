@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Callable
+from sklearn.feature_selection import f_regression
 import sys
 sys.path.append('../TPC1')
 from tpc1 import Dataset
@@ -25,15 +26,13 @@ class SelectKBest:
         return self.transform(X)
     
     
-from sklearn.feature_selection import f_regression
+
 
 # create a sample dataset
 X = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 y = np.array([1, 2, 3])
 
-# create a SelectKBest object and fit_transform the data
-selector = SelectKBest(score_func=f_regression, k=2)
-X_new = selector.fit_transform(X, y)
+kBest = SelectKBest(score_func=f_regression, k=2)
+res = kBest.fit_transform(X, y)
 
-# print the selected features
-print(X_new)
+print(res)
