@@ -13,74 +13,145 @@ class DecisionTree:
     def fit(self, X, y):
         self.tree = self._grow_tree(X, y)
     
-    def _grow_tree(self, X, y, depth=0):
-        num_samples, num_features = X.shape
-        num_classes = len(set(y))
-        # stop criteria
-        if (self.max_depth is not None and depth >= self.max_depth) or \
-           (num_samples < self.min_samples_split) or \
-           (num_samples < 2 * self.min_samples_leaf):
-            leaf_value = self._leaf_value(y)
-            return leaf_value
-        # find best split
-        best_split = None
-        best_split_criterion = 1e10
-        if self.criterion == 'entropy':
-            root_criterion = self._entropy(y)
-        else:
-            root_criterion = self._gini(y)
-        for feature_idx in range(num_features):
-            X_column = X[:, feature_idx]
-            thresholds = np.unique(X_column)
-            for threshold in thresholds:
-                y_left = y[X_column < threshold]
-                y_right = y[X_column >= threshold]
-                if len(y_left) == 0 or len(y_right) == 0:
-                    continue
-                if self.criterion == 'entropy':
-                    left_criterion = self._entropy(y_left)
-                    right_criterion = self._entropy(y_right)
-                else:
-                    left_criterion = self._gini(y_left)
-                    right_criterion = self._gini(y_right)
-                weighted_criterion = (len(y_left) / num_samples) * left_criterion + (len(y_right) / num_samples) * right_criterion
-                if weighted_criterion < best_split_criterion:
-                    best_split = {'feature_idx': feature_idx, 'threshold': threshold, 
-                                  'left_indices': X_column < threshold, 'right_indices': X_column >= threshold}
-                    best_split_criterion = weighted_criterion
-        # check if best split is not good enough to split
-        if best_split_criterion > root_criterion:
-            leaf_value = self._leaf_value(y)
-            return leaf_value
-        # split the tree and continue growing
-        left_tree = self._grow_tree(X[best_split['left_indices']], y[best_split['left_indices']], depth + 1)
-        right_tree = self._grow_tree(X[best_split['right_indices']], y[best_split['right_indices']], depth + 1)
-        return {'feature_idx': best_split['feature_idx'], 'threshold': best_split['threshold'],
-                'left': left_tree, 'right': right_tree}
+    def predict(self, X):
+        return np.array([self._traverse_tree(x, self.tree) for x in X])
     
-    def _leaf_value(self, y):
+    def _grow_tree(self, X, y, depth=0):
+        n_samples, n_features = X.shape
+        n_labels = len(np.unique(y))
+        
+        # Stopping criteria
+        if (depth >= self.max_depth or n_labels == 1 or n_samples < self.min_samples_split or n_samples < self.min_samples_leaf):
+            leaf_value = self._most_common_label(y)
+            return leaf_value
+        
+        # Grow tree
+        feature_idx, threshold = self._best_criteria(X, y)
+        left_idx, right_idx = self._split(X[:, feature_idx], threshold)
+        left = self._grow_tree(X[left_idx, :], y[left_idx], depth + 1)
+        right = self._grow_tree(X[right_idx, :], y[right_idx], depth + 1)
+        
+        return {'feature_idx': feature_idx, 'threshold': threshold, 'left': left, 'right': right}
+    
+    def _best_criteria(self, X, y):
+        m = X.shape[1]
+        best_gini = 100
+        split_idx, split_threshold = None, None
+
+        if self.criterion == 'gini':
+            for idx in range(m):
+                X_column = X[:, idx]
+                thresholds = np.unique(X_column)
+                for threshold in thresholds:
+                    _, y_right = self._split(X_column, threshold)
+                    gini = self.gini_index(y_right)
+                    
+                    if gini < best_gini:
+                        best_gini = gini
+                        split_idx = idx
+                        split_threshold = threshold
+
+        elif self.criterion == 'entropy':
+            for idx in range(m):
+                X_column = X[:, idx]
+                thresholds = np.unique(X_column)
+                for threshold in thresholds:
+                    _, y_right = self._split(X_column, threshold)
+                    entropy = self.entropy(y_right)
+                    
+                    if entropy < best_gini:
+                        best_gini = entropy
+                        split_idx = idx
+                        split_threshold = threshold
+
+        elif self.criterion == 'gain_ratio':
+            for idx in range(m):
+                X_column = X[:, idx]
+                thresholds = np.unique(X_column)
+                for threshold in thresholds:
+                    _, y_right = self._split(X_column, threshold)
+                    gain_ratio = self.gain_ratio(X_column, y_right)
+                    
+                    if gain_ratio > best_gini:
+                        best_gini = gain_ratio
+                        split_idx = idx
+                        split_threshold = threshold
+        
+        # for idx in range(m):
+        #     X_column = X[:, idx]
+        #     thresholds = np.unique(X_column)
+        #     for threshold in thresholds:
+        #         _, y_right = self._split(X_column, threshold)
+        #         gini = self.gini_index(y_right)
+                
+        #         if gini < best_gini:
+        #             best_gini = gini
+        #             split_idx = idx
+        #             split_threshold = threshold
+        
+        return split_idx, split_threshold
+    
+    def _split(self, X_column, split_threshold):
+        left_idx = np.argwhere(X_column <= split_threshold).flatten()
+        right_idx = np.argwhere(X_column > split_threshold).flatten()
+        return left_idx, right_idx
+    
+    def _most_common_label(self, y):
         counter = Counter(y)
         most_common = counter.most_common(1)[0][0]
         return most_common
     
-    def _gini(self, y):
-        counter = Counter(y)
-        impurity = 1
-        for label in counter:
-            prob = counter[label] / len(y)
-            impurity -= prob ** 2
-        return impurity
-'''
-    def _entropy(self, y):
-        counter = Counter(y)
-        entropy = 
-
-        Falta Gain Ratio
-        Falta resollução de conflitos dos slides
+    def _traverse_tree(self, x, tree):
+        if tree in [0, 1]:
+            return tree
         
-    def main():
+        feature_value = x[tree['feature_idx']]
+        if feature_value <= tree['threshold']:
+            return self._traverse_tree(x, tree['left'])
+        return self._traverse_tree(x, tree['right'])
+    
+    def entropy(self, label):
+        _, counts = np.unique(label, return_counts=True)
+        probabilities = counts / len(label)
+        entropy = -np.sum(probabilities * np.log2(probabilities))
+        return entropy
+    
+    def gini_index(self, label):
+        counts = np.unique(label, return_counts=True)[1]
+        proportions = counts / len(label)
+        gini = 1 - np.sum(proportions ** 2)
+        return gini
 
-main()
+    def gain_ratio(self, feature, labels):
+        n = len(labels)
+        values, counts = np.unique(feature, return_counts=True)
+        H = self.entropy(labels)
+        IV = - np.sum((counts / n) * np.log2(counts / n))
+        IG = H
+        for value, count in zip(values, counts):
+            subset_labels = labels[feature == value]
+            IG -= (count / n) * self.entropy(subset_labels)
+        return IG / IV if IV != 0 else 0
 
 
-'''
+
+if __name__ == '__main__':
+    from sklearn import datasets
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import accuracy_score
+    
+    def accuracy(y_true, y_pred):
+        accuracy = np.sum(y_true == y_pred) / len(y_true)
+        return accuracy
+    
+    data = datasets.load_breast_cancer()
+    X, y = data.data, data.target
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1234)
+    
+    clf = DecisionTree(max_depth=10, criterion='entropy')
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    
+    print("Accuracy:", accuracy)
