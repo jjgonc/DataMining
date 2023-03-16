@@ -2,20 +2,22 @@ import numpy as np
 from collections import Counter
 
 class DecisionTree:
-    def __init__(self, max_depth=None, min_samples_split=2, min_samples_leaf=1, criterion='gini', prune=False):
+    def __init__(self, max_depth=None, max_features = None, min_samples_split=2, min_samples_leaf=1, criterion='gini', pre_prune=None, post_prune=None):
         self.max_depth = max_depth
         self.min_samples_split = min_samples_split
         self.min_samples_leaf = min_samples_leaf
         self.criterion = criterion
-        self.prune = prune
-        self.tree = None
+        self.max_features = max_features
+        self.pre_prune = pre_prune
+        self.post_prune = post_prune
     
     def fit(self, X, y):
-        self.tree = self._grow_tree(X, y)
+        self.tree = self._grow_tree(X, y)       # build the tree
     
     def predict(self, X):
-        return np.array([self._traverse_tree(x, self.tree) for x in X])
+        return np.array([self._traverse_tree(x, self.tree) for x in X])     # predict the labels
     
+
     def _grow_tree(self, X, y, depth=0):
         n_samples, n_features = X.shape
         n_labels = len(np.unique(y))
@@ -26,69 +28,41 @@ class DecisionTree:
             return leaf_value
         
         # Grow tree
-        feature_idx, threshold = self._best_criteria(X, y)
-        left_idx, right_idx = self._split(X[:, feature_idx], threshold)
-        left = self._grow_tree(X[left_idx, :], y[left_idx], depth + 1)
-        right = self._grow_tree(X[right_idx, :], y[right_idx], depth + 1)
-        
+        feature_idx, threshold = self._best_criteria(X, y)  # find the best split
+        left_idx, right_idx = self._split(X[:, feature_idx], threshold) # split the data
+        left = self._grow_tree(X[left_idx, :], y[left_idx], depth + 1)  # grow the left subtree
+        right = self._grow_tree(X[right_idx, :], y[right_idx], depth + 1)   # grow the right subtree
+
         return {'feature_idx': feature_idx, 'threshold': threshold, 'left': left, 'right': right}
-    
+
+
     def _best_criteria(self, X, y):
-        m = X.shape[1]
-        best_gini = 100
-        split_idx, split_threshold = None, None
+        nFeatures = X.shape[1]  # number of features
+        best_impurity = np.inf
+        split_bestFeature, split_bestThreshold = None, None
 
-        if self.criterion == 'gini':
-            for idx in range(m):
-                X_column = X[:, idx]
-                thresholds = np.unique(X_column)
-                for threshold in thresholds:
-                    _, y_right = self._split(X_column, threshold)
-                    gini = self.gini_index(y_right)
-                    
-                    if gini < best_gini:
-                        best_gini = gini
-                        split_idx = idx
-                        split_threshold = threshold
+        if self.max_features is not None:
+            features_indices = np.random.choice(range(X.shape[1]), size=self.max_features, replace=False)
+        else:
+            features_indices = range(X.shape[1])
 
-        elif self.criterion == 'entropy':
-            for idx in range(m):
-                X_column = X[:, idx]
-                thresholds = np.unique(X_column)
-                for threshold in thresholds:
-                    _, y_right = self._split(X_column, threshold)
-                    entropy = self.entropy(y_right)
-                    
-                    if entropy < best_gini:
-                        best_gini = entropy
-                        split_idx = idx
-                        split_threshold = threshold
-
-        elif self.criterion == 'gain_ratio':
-            for idx in range(m):
-                X_column = X[:, idx]
-                thresholds = np.unique(X_column)
-                for threshold in thresholds:
-                    _, y_right = self._split(X_column, threshold)
-                    gain_ratio = self.gain_ratio(X_column, y_right)
-                    
-                    if gain_ratio > best_gini:
-                        best_gini = gain_ratio
-                        split_idx = idx
-                        split_threshold = threshold
-        
-        # for idx in range(m):
-        #     X_column = X[:, idx]
-        #     thresholds = np.unique(X_column)
-        #     for threshold in thresholds:
-        #         _, y_right = self._split(X_column, threshold)
-        #         gini = self.gini_index(y_right)
+        for idx in features_indices:
+            X_column = X[:, idx]
+            thresholds = np.unique(X_column)
+            for threshold in thresholds:
+                _, y_right = self._split(X_column, threshold)
+                if self.criterion == 'gini':
+                    impurity = self.gini_index(y_right)
+                elif self.criterion == 'entropy':
+                    impurity = self.entropy(y_right)
+                elif self.criterion == 'gain_ratio':
+                    impurity = self.gain_ratio(X_column, y_right)
                 
-        #         if gini < best_gini:
-        #             best_gini = gini
-        #             split_idx = idx
-        #             split_threshold = threshold
-        
+                if impurity < best_impurity:
+                    best_impurity = impurity
+                    split_idx = idx
+                    split_threshold = threshold
+
         return split_idx, split_threshold
     
     def _split(self, X_column, split_threshold):
@@ -113,25 +87,25 @@ class DecisionTree:
     def entropy(self, label):
         _, counts = np.unique(label, return_counts=True)
         probabilities = counts / len(label)
-        entropy = -np.sum(probabilities * np.log2(probabilities))
+        entropy = -np.sum(probabilities * np.log2(probabilities))   # -sum(p(x)log2(p(x)))
         return entropy
     
     def gini_index(self, label):
         counts = np.unique(label, return_counts=True)[1]
         proportions = counts / len(label)
-        gini = 1 - np.sum(proportions ** 2)
+        gini = 1 - np.sum(proportions ** 2)                   # 1 - sum(p(x)^2)
         return gini
 
     def gain_ratio(self, feature, labels):
         n = len(labels)
         values, counts = np.unique(feature, return_counts=True)
-        H = self.entropy(labels)
-        IV = - np.sum((counts / n) * np.log2(counts / n))
-        IG = H
-        for value, count in zip(values, counts):
+        entropy = self.entropy(labels)
+        IV = - np.sum((counts / n) * np.log2(counts / n))             # Intrinsic value = -sum(p(x)log2(p(x)))
+        IG = entropy                                                  # Information gain 
+        for value, count in zip(values, counts):                
             subset_labels = labels[feature == value]
             IG -= (count / n) * self.entropy(subset_labels)
-        return IG / IV if IV != 0 else 0
+        return IG / IV if IV != 0 else 0                              # Gain ratio = Information gain / Intrinsic value 
 
 
 
