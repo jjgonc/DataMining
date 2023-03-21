@@ -105,26 +105,32 @@ class DecisionTree:
                 elif self.criterion == 'entropy':
                     impurity = self.entropy(y_right)
                 elif self.criterion == 'gain_ratio':
-                    impurity = self.gain_ratio(X_column, y_right)
-                
-                if impurity < best_impurity:
-                    best_impurity = impurity
-                    split_idx = idx
-                    split_threshold = threshold
+                    impurity_gain = self.gain_ratio(X_column, y_right)
+
+                if (self.criterion == 'gain_ratio'):        # different case than entropy and giniIndex, where we need to maximize the gain ratio
+                    if impurity_gain > best_impurity_gain:
+                        best_impurity_gain = impurity_gain
+                        split_idx = idx
+                        split_threshold = threshold
+                else:
+                    if impurity < best_impurity:
+                        best_impurity = impurity
+                        split_idx = idx
+                        split_threshold = threshold
 
         return split_idx, split_threshold
-    
+
     def _split(self, X_column, split_threshold):
-        left_idx = np.argwhere(X_column <= split_threshold).flatten()
-        right_idx = np.argwhere(X_column > split_threshold).flatten()
+        left_idx = np.argwhere(X_column <= split_threshold).flatten()   # indices of the left subtree
+        right_idx = np.argwhere(X_column > split_threshold).flatten()   # indices of the right subtree
         return left_idx, right_idx
     
-    def _most_common_label(self, y):
-        counter = Counter(y)
-        most_common = counter.most_common(1)[0][0]
+    def _most_common_label(self, y):        # return the most common label
+        counter = Counter(y)            # count the number of each label
+        most_common = counter.most_common(1)[0][0]  
         return most_common
     
-    def _traverse_tree(self, x, tree):
+    def _traverse_tree(self, x, tree):  # traverse the tree to make a prediction
         if tree in [0, 1]:
             return tree
         
@@ -162,7 +168,6 @@ class DecisionTree:
             IG -= (count / n) * self.entropy(subset_labels)
         return IG / IV if IV != 0 else 0                              # Gain ratio = Information gain / Intrinsic value 
 
-
     # Post-Prunning ------- Checking for Pessimistic Error
     def _is_pessimistic_error_prunable(self, X, y, attribute, threshold):
         left_mask = X[:, attribute] < threshold
@@ -179,8 +184,7 @@ class DecisionTree:
         
         left_error = self._get_reduced_error(y[left_mask])
         right_error = self._get_reduced_error(y[right_mask])
-        total_error = (len(y[left_mask]) * left_error + len(y[right_mask]) * right_error) / len(y)
-        
+        total_error = (len(y[left_mask]) * left_error + len(y[right_mask]) * right_error) / len(y)        
         return total_error < self.post_prune
 
     # Post-Prunning ------- Calculating Pessimistic Error
@@ -207,7 +211,7 @@ if __name__ == '__main__':
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1234)
     
-    clf = DecisionTree(max_depth=10, criterion='entropy')
+    clf = DecisionTree(max_depth=10, criterion='gain_ratio')
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
