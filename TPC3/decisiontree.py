@@ -50,9 +50,9 @@ class DecisionTree:
         feature_idx, threshold = self._best_criteria(X, y, depth)  # find the best split
 
         # Check for post-pruning conditions
-        if self.post_prune == 'pessimistic_error' and self._is_pessimistic_error_prunable(X, y, best_attribute, best_threshold):
+        if self.post_prune == 'pessimistic_error' and self._is_pessimistic_error_prunable(X, y, self.best_attribute, self.best_threshold):
             return self._most_common_label(y)
-        elif self.post_prune == 'reduced_error' and self._is_reduced_error_prunable(X, y, best_attribute, best_threshold):
+        elif self.post_prune == 'reduced_error' and self._is_reduced_error_prunable(X, y, self.best_attribute, self.best_threshold):
             return self._most_common_label(y)
 
         # Split data based on best attribute and threshold
