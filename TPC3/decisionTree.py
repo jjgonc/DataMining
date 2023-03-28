@@ -16,7 +16,7 @@ class Node:
 
 
 class DecisionTree:
-    def __init__(self, maxDepth=5, minSamplesSplit=2, minSamplesLeaf=1, maxLeafSize = None, maxFeatures=None, threshold=None, featureIdxs=None, pruneMethod=None, p_value=None, root=None, criterion='gini'):
+    def __init__(self, maxDepth=5, minSamplesSplit=2, minSamplesLeaf=1, maxLeafSize = None, maxFeatures=None, threshold=None, featureIdxs=None, pruneMethod=None, postPruneMethod=None, p_value=None, root=None, criterion='gini'):
         self.maxDepth = maxDepth
         self.minSamplesSplit = minSamplesSplit
         self.minSamplesLeaf = minSamplesLeaf
@@ -25,6 +25,7 @@ class DecisionTree:
         self.criterion = criterion
         self.root = root
         self.pruneMethod = pruneMethod
+        self.postPruneMethod = postPruneMethod
         self.threshold = threshold
         self.featureIdxs = featureIdxs
         self.p_value = p_value  # p-value usado no teste do qui-quadrado para a poda antecipada
@@ -78,6 +79,9 @@ class DecisionTree:
         
         left = self._buildTree(X[left_indices], y[left_indices])
         right = self._buildTree(X[right_indices], y[right_indices])
+
+        if self.postPruneMethod == "pessimistic":
+            self.pessimisticErrorPrunning(self.root, X, y)
         return Node(splitFeature=indexOfBestFeature, splitThreshold=bestThreshold, left=left, right=right, impurity=newImpurity)
     
     def _calculateCriterion(self, X, y):
@@ -113,7 +117,6 @@ class DecisionTree:
         _, counts = np.unique(y, return_counts=True)
         return -np.sum((counts / len(y)) * np.log(counts / len(y)))
 
-    #TODO:-
     def _gain_ratio(self, y, left_indices, right_indices):
         '''
         Função que calcula o ganho de informação de uma divisão binária (esquerda e direita).
@@ -142,7 +145,6 @@ class DecisionTree:
         # Retornar o ganho de informação
         return (entropy_before_split - weighted_avg_entropy) / split_info if split_info != 0 else 0
 
-    #TODO:
     def select_best_split_entropy(self, X, y): 
         '''
         Seleção do melhor split baseado na entropia (como medida de impureza) para construção de uma árvore de decisão.
@@ -170,7 +172,6 @@ class DecisionTree:
                     best_info_gain = info_gain
         return indexOfBestFeature, bestThreshold
 
-    #TODO:
     def select_best_split_gini_index(self, X, y):
         '''
         Seleção do melhor split para uma árvore de decisão baseado no índice de Gini.
@@ -185,7 +186,7 @@ class DecisionTree:
         '''
         indexOfBestFeature = None 
         bestThreshold = None 
-        best_gini = - np.inf    #FIXME: Confirmar isto!!!
+        best_gini = - np.inf
         for feature_index in self.featureIdxs:
             for threshold in np.unique(X[:, feature_index]):
                 left_indices = np.where(X[:, feature_index] <= threshold)[0]
@@ -198,7 +199,6 @@ class DecisionTree:
                     indexOfBestFeature, bestThreshold, best_gini = feature_index, threshold, current_gini
         return indexOfBestFeature, bestThreshold
 
-    #TODO:
     def select_best_split_gain_ratio(self, X, y):
         '''
         Seleção do melhor split para uma árvore de decisão baseado no ganho de informação.
@@ -243,7 +243,6 @@ class DecisionTree:
             node.label = right_label
         return node
 
-    #TODO:
     def _classThreshold(self, y, node):
         '''
         Método de resolução de conflitos para árvores de decisão.
@@ -278,8 +277,6 @@ class DecisionTree:
                 node.label = right_label
         return node
 
-
-    #TODO:
     def pre_pruning(self, y):
         '''
         Função que verifica se o split é estatisticamente significante.
@@ -302,7 +299,6 @@ class DecisionTree:
         else:
             return False
 
-    #TODO:
     def prune_tree(self, node, X, y, threshold=None):
         '''
         Função que realiza o pruning da árvore, permitindo reduzir o overfir em modelos de árvores de decisão.
@@ -353,6 +349,8 @@ class DecisionTree:
             y_pred_right = self.predict(X[node.right])
             error_right = 1 - accuracy_score(y[node.right], y_pred_right)
             error_expected += error_right + self.prune_tree(node.right, X[node.right], y[node.right]).impurity
+        else:
+            error_expected = error_node
         # Se a taxa de erro esperada for maior do que a taxa de erro do nó, substitui o nó e seus filhos por um nó folha
         if error_expected > error_node:
             node.left = None
@@ -412,7 +410,7 @@ def main():
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    dt = DecisionTree(maxDepth=3, minSamplesLeaf=2, criterion="entropy", pruneMethod="majority", threshold=0.1, maxLeafSize=2, p_value=0.5)
+    dt = DecisionTree(maxDepth=3, minSamplesLeaf=2, criterion="entropy", pruneMethod="majority", postPruneMethod="pessimistic", threshold=0.1, maxLeafSize=2, p_value=0.5)
     dt.fit(X_train, y_train)       # treina o modelo
     y_pred = dt.predict(X_test)     # faz as predições
     accuracy = accuracy_score(y_test, y_pred)    # calcula a percentagem de acertos
