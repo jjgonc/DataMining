@@ -32,33 +32,35 @@ class AprioriAlgorithm:
         candidates = self.transaction_dataset.freq_items
         freq_items = {}
         freq_itemsets = {}
+        iteractionsList = []
 
-        #NOTE: Passei isto para aqui porque nao faz sentido estar em baixo, uma vez que é inicializado apenas no inicio e depois atualizado com os valores resultantes da generateCandidates
         for candidate, count in candidates:
-            if count >= self.min_support:    # If the candidate is frequent, add it to the list of frequent items
-                freq_items[candidate] = count  # Add the candidate to the list of frequent items
-            
-            if not freq_items:  # in the case that there are no items that cover the min_support, finish the algorithm 
+            if count >= self.min_support:
+                freq_items[candidate] = count 
+            if not freq_items:
                 break
-                
-            freq_itemsets.update(freq_items)    # Add the list of frequent items to the list of frequent itemsets. Here, each index has the list of frequent items for level k+1 (because first index is 0)
+            freq_itemsets.update(freq_items) 
         
+        iteractionsList.append(freq_itemsets)
         k = 2
         _continue = True
         
         while _continue:
             print("k= ", k)
+            print("l51 freq_itemsets: ", freq_itemsets)
             candidates = self.generateCandidateItemsets(freq_itemsets, k)
-            if not candidates:
+            print("l53 candidates: ", candidates)
+            if not candidates or len(candidates) == 0:
                 break
 
             # candidates = self.pruneItemsets(candidates, freq_itemsets)
-            # if not candidates:
-            #     break
-
+            if not candidates:
+                break
+            iteractionsList.append(candidates)
+            print("l62 iteractionsList: ", iteractionsList)
             k += 1
         print("freq_items at the end ", freq_items)
-        return freq_itemsets
+        return iteractionsList
     
     
     def generateCandidateItemsets(self, itemset, k):    # this method takes the frequent items of the previous level and generates the candidates for the next level
@@ -69,10 +71,8 @@ class AprioriAlgorithm:
         candidatesList = []
         for candidate in candidates:
             candidatesList.append(candidate)
-        print("l74 candidatesList: ", candidatesList)
 
         candidatesList = self.calculateFrequentItemset(candidatesList)
-        print("l76 candidatesList: ", candidatesList)
         return candidatesList
     
 
@@ -100,6 +100,19 @@ class AprioriAlgorithm:
                 # print("element ", item, "removed from flitered candidates")
                 filteredDict[item] = filtered_candidates[item]
         return filteredDict
+
+
+
+    def printAprioriResults(self):
+        """
+        Print the results of the Apriori algorithm
+        """
+        for i, itemset in enumerate(self.frequent_itemsets):
+            print("Frequent itemsets of length %d" % (i+1))
+            print(itemset)
+            print()
+
+
 
     def pruneItemsets(self, candidates, itemset):
         """
@@ -186,5 +199,6 @@ if __name__ == "__main__":
     
     transaction_dataset = TransactionDataset(transactions2)
     apriori = AprioriAlgorithm(transaction_dataset, 2)
+    apriori.printAprioriResults()
     rules = apriori.generateRules(0.6)
     apriori.printRules(rules)
