@@ -17,11 +17,10 @@ class TransactionDataset:
                     counts[item] = 1
         # sort item_counts by count in descending order and return as a list of (item, count) tuples
         freq_items = sorted(counts.items(), key=lambda x: x[1], reverse=True)
-        print("19: freq_items: ", freq_items)
         return freq_items
 
 class AprioriAlgorithm:
-    def __init__(self, transaction_dataset, min_support):
+    def __init__(self, transaction_dataset : TransactionDataset, min_support):
         self.transaction_dataset = transaction_dataset
         self.min_support = min_support
         self.frequent_itemsets = self.getFrequentItemsets()
@@ -43,23 +42,22 @@ class AprioriAlgorithm:
                 break
                 
             freq_itemsets.update(freq_items)    # Add the list of frequent items to the list of frequent itemsets. Here, each index has the list of frequent items for level k+1 (because first index is 0)
-            print("46: freq_itemsets: ", freq_itemsets)
-            print("47: freq_items: ", freq_items)
         
         k = 2
         _continue = True
         
         while _continue:
             print("k= ", k)
-            candidates = self.generateCandidateItemsets(freq_itemsets.keys(), k)
-            print("candidates: ", candidates)
-
+            candidates = self.generateCandidateItemsets(freq_itemsets, k)
             if not candidates:
                 break
 
-            candidates = self.pruneItemsets(candidates, freq_itemsets)
+            # candidates = self.pruneItemsets(candidates, freq_itemsets)
+            # if not candidates:
+            #     break
+
             k += 1
-        
+        print("freq_items at the end ", freq_items)
         return freq_itemsets
     
     
@@ -67,12 +65,42 @@ class AprioriAlgorithm:
         """
         Generate candidate itemsets of length k given a frequent itemset of length k-1
         """
-        candidates = itertools.combinations(itemset, k)
+        candidates = itertools.combinations(itemset.keys(), k)
         candidatesList = []
         for candidate in candidates:
             candidatesList.append(candidate)
+        print("l74 candidatesList: ", candidatesList)
+
+        candidatesList = self.calculateFrequentItemset(candidatesList)
+        print("l76 candidatesList: ", candidatesList)
         return candidatesList
     
+
+    def calculateFrequentItemset(self, candidatesList):
+        # for candidate in candidates:
+        #     if candidate[0] not in itemset.keys() or candidate[1] not in itemset.keys():
+        #         candidates.remove(candidate)
+        # return candidates
+        """
+        Filter candidate itemsets by checking if they occur in at least one transaction in the dataset
+        """
+        filtered_candidates = {}
+        for candidate in candidatesList:
+            for transaction in self.transaction_dataset.transactions:
+                if set(candidate).issubset(transaction):
+                    if candidate not in filtered_candidates:
+                        filtered_candidates[candidate] = 1
+                    else:
+                        filtered_candidates[candidate] += 1
+
+        filteredDict = {}
+
+        for item in filtered_candidates:
+            if filtered_candidates[item] >= self.min_support:
+                # print("element ", item, "removed from flitered candidates")
+                filteredDict[item] = filtered_candidates[item]
+        return filteredDict
+
     def pruneItemsets(self, candidates, itemset):
         """
         Prune candidate itemsets that contain subsets of length k-1 that are not frequent
