@@ -1,5 +1,5 @@
 from typing import List, Set, Dict, Tuple
-import itertools
+from itertools import chain, combinations
 
 class TransactionDataset:
     def __init__(self, transactions: List[Set[int]]):
@@ -46,10 +46,7 @@ class AprioriAlgorithm:
         _continue = True
         
         while _continue:
-            print("k= ", k)
-            print("l51 freq_itemsets: ", freq_itemsets)
             candidates = self.generateCandidateItemsets(freq_itemsets, k)
-            print("l53 candidates: ", candidates)
             if not candidates or len(candidates) == 0:
                 break
 
@@ -57,9 +54,7 @@ class AprioriAlgorithm:
             if not candidates:
                 break
             iteractionsList.append(candidates)
-            print("l62 iteractionsList: ", iteractionsList)
             k += 1
-        print("freq_items at the end ", freq_items)
         return iteractionsList
     
     
@@ -67,7 +62,7 @@ class AprioriAlgorithm:
         """
         Generate candidate itemsets of length k given a frequent itemset of length k-1
         """
-        candidates = itertools.combinations(itemset.keys(), k)
+        candidates = combinations(itemset.keys(), k)
         candidatesList = []
         for candidate in candidates:
             candidatesList.append(candidate)
@@ -101,8 +96,6 @@ class AprioriAlgorithm:
                 filteredDict[item] = filtered_candidates[item]
         return filteredDict
 
-
-
     def printAprioriResults(self):
         """
         Print the results of the Apriori algorithm
@@ -113,69 +106,45 @@ class AprioriAlgorithm:
             print()
 
 
+    def powerset(self, iterable):
+        s = list(iterable)
+        return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
-    def pruneItemsets(self, candidates, itemset):
-        """
-        Prune candidate itemsets that contain subsets of length k-1 that are not frequent
-        """
-        pruned_candidates = []
-        for candidate in candidates:
-            subsets = self.getSubsets(candidate)
-            if all([subset in itemset for subset in subsets]):
-                pruned_candidates.append(candidate)
-        return pruned_candidates
-    
-    def getSubsets(self, itemset):
-        """
-        Generate all non-empty subsets of an itemset
-        """
-        subsets = []
-        for i in range(1, len(itemset)):
-            subsets.extend(itertools.combinations(itemset, i))
-        return subsets
-    
-    def generateRules(self, min_confidence):
+
+    def apriori_association_rules(self, freq_itemsets, min_support, min_confidence):
+        # generate association rules
+        for itemset in freq_itemsets:
+            if isinstance(itemset, int):
+                continue
+            for antecedent in self.powerset(itemset):
+                antecedent = tuple(antecedent)
+                if antecedent not in freq_itemsets:
+                    continue
+                support_antecedent = freq_itemsets[antecedent]
+                support_consequent = freq_itemsets[itemset]
+                confidence = support_consequent / support_antecedent
+                if confidence >= min_confidence:
+                    print("{} -> {}: support = {}, confidence = {}".format(
+                        list(antecedent), list(set(itemset) - set(antecedent)), support_consequent, confidence))
+
+
+
+
+    def associationRules(self, min_confidence, min_support):
         """
         Generate association rules from frequent itemsets
         """
-        rules = []
+        everyItem = {}
         for itemset in self.frequent_itemsets:
-            if len(itemset) > 1:
-                subsets = self.getSubsets(itemset)
-                for subset in subsets:
-                    antecedent = frozenset(subset)
-                    consequent = frozenset(set(itemset) - antecedent)
-                    confidence = self.getConfidence(antecedent, consequent)
-                    if confidence >= min_confidence:
-                        rules.append((antecedent, consequent, confidence))
-        return rules
+            for k,v in itemset.items():
+                everyItem[k] = v
+        # print("everyItem: ", everyItem)
+
+        self.apriori_association_rules(everyItem, min_support, min_confidence)
+
 
     
-    def getConfidence(self, antecedent, consequent):
-        """
-        Calculate the confidence of an association rule
-        """
-        antecedent_count = self.getCount(antecedent)
-        itemset_count = self.getCount(antecedent | consequent)
-        return itemset_count/antecedent_count
     
-    def getCount(self, itemset):
-        """
-        Calculate the number of transactions that contain a given itemset
-        """
-        count = 0
-        for transaction in self.transaction_dataset.transactions:
-            if itemset.issubset(transaction):
-                count += 1
-        return count
-    
-    def printRules(self, rules):
-        """
-        Print the association rules generated by the algorithm
-        """
-        for antecedent, consequent, confidence in rules:
-            print("{} => {} (Confidence: {})".format(antecedent, consequent, confidence))
-
 if __name__ == "__main__":
     transactions = [
         {1, 2, 3},
@@ -200,5 +169,5 @@ if __name__ == "__main__":
     transaction_dataset = TransactionDataset(transactions2)
     apriori = AprioriAlgorithm(transaction_dataset, 2)
     apriori.printAprioriResults()
-    rules = apriori.generateRules(0.6)
-    apriori.printRules(rules)
+
+    apriori.associationRules(0.6, 2)
