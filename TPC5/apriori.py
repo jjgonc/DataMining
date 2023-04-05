@@ -96,20 +96,24 @@ class AprioriAlgorithm:
                 filteredDict[item] = filtered_candidates[item]
         return filteredDict
 
+    #TODO: Falta ordenar aqui os tuplos do itemset
     def printAprioriResults(self):
         """
         Print the results of the Apriori algorithm
         """
         for i, itemset in enumerate(self.frequent_itemsets):
+            myKeys = list(itemset.keys())
+            myKeys.sort()
+            sorted_Dict = {ind : itemset[ind] for ind in myKeys}
             print("Frequent itemsets of length %d" % (i+1))
-            print(itemset)
+            print(sorted_Dict)
             print()
 
 
     def powerset(self, iterable):
         s = list(iterable)
-        return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
-
+        res = chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+        return res
 
     def apriori_association_rules(self, freq_itemsets, min_support, min_confidence):
         # generate association rules
@@ -128,8 +132,6 @@ class AprioriAlgorithm:
                         list(antecedent), list(set(itemset) - set(antecedent)), support_consequent, confidence))
 
 
-
-
     def associationRules(self, min_confidence, min_support):
         """
         Generate association rules from frequent itemsets
@@ -138,7 +140,7 @@ class AprioriAlgorithm:
         for itemset in self.frequent_itemsets:
             for k,v in itemset.items():
                 everyItem[k] = v
-        # print("everyItem: ", everyItem)
+        print("itemset: ", everyItem)
 
         self.apriori_association_rules(everyItem, min_support, min_confidence)
 
@@ -171,3 +173,6 @@ if __name__ == "__main__":
     apriori.printAprioriResults()
 
     apriori.associationRules(0.6, 2)
+
+    # rules = apriori.generateRules(0.6)
+    # apriori.printRules(rules)
