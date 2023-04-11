@@ -1,4 +1,8 @@
 import pandas as pd
+import numpy as np
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
 class Prism:
     def __init__(self, min_support=0.1, max_rules=10):
@@ -48,18 +52,30 @@ class Prism:
             rules.append(rule)
             df = df[~((df[rule['conditions'].keys()] == rule['conditions']).all(axis=1))]
         
+        self.rules = rules  # Save the rules as an instance attribute
         return rules
+    
+    def __repr__(self):
+        repr_str = "PRISM Rules:\n"
+        for i, rule in enumerate(self.rules):
+            repr_str += f"Rule {i+1}: Class={rule['class']}, Support={rule['support']}, Conditions={rule['conditions']}\n"
+        return repr_str
 
 
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
 
-iris = load_iris()
-X_train, X_test, y_train, y_test = train_test_split(iris.data, iris.target, test_size=0.2, random_state=42)
 
-prism = Prism(min_support=0.1, max_rules=10)
-prism.fit(pd.DataFrame(X_train, columns=iris.feature_names), pd.Series(y_train))
+def main():
+    iris = load_iris()
+    X_train, X_test, y_train, y_test = train_test_split(iris.data, iris.target, test_size=0.2, random_state=42)
 
-y_pred = prism.predict(pd.DataFrame(X_test, columns=iris.feature_names))
-print(f"Accuracy: {accuracy_score(y_test, y_pred)}")
+    prism = Prism(min_support=0.1, max_rules=10)
+    prism.fit(pd.DataFrame(X_train, columns=iris.feature_names), pd.Series(y_train))
+
+    print(prism)  # Imprime as regras geradas pelo algoritmo PRISM
+
+    y_pred = prism.predict(pd.DataFrame(X_test, columns=iris.feature_names))
+
+    print(f"Accuracy: {accuracy_score(y_test, y_pred)}")
+
+if __name__ == "__main__":
+    main()
