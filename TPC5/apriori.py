@@ -118,6 +118,7 @@ class AprioriAlgorithm:
     def apriori_association_rules(self, freq_itemsets, min_support, min_confidence):
         # generate association rules
         for itemset in freq_itemsets:
+            print("\n\nitemset: ", itemset)
             if isinstance(itemset, int):
                 continue
             for antecedent in self.powerset(itemset):
@@ -140,8 +141,11 @@ class AprioriAlgorithm:
         for itemset in self.frequent_itemsets:
             for k,v in itemset.items():
                 everyItem[k] = v
-        print("itemset: ", everyItem)
+        print("Pre-ordering itemset: ", everyItem)
+        
+        everyItem = { tuple(sorted([k] if type(k) is int else k)) : v for k, v in everyItem.items() }
 
+        print("Post-ordering itemset: ", everyItem)
         self.apriori_association_rules(everyItem, min_support, min_confidence)
 
 
