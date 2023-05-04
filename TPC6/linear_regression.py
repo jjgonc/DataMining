@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-"""
-@author: miguelrocha
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -92,55 +85,65 @@ class LinearRegression:
         self.X[:,1:] = self.X[:,1:] / self.sigma
         self.normalized = True
 
+    def splitData(self, test_size=0.2):
+        m = self.X.shape[0]
+        test_size = int(test_size * m)
+        indices = np.random.permutation(m)
+        self.X_train, self.y_train = self.X[indices[:-test_size]], self.y[indices[:-test_size]]
+        self.X_test, self.y_test = self.X[indices[-test_size:]], self.y[indices[-test_size:]]
 
 
-def test_2var(regul = False):
-    ds= Dataset("lr-example1.data")   
-    
+
+def test_2var(regul=False, test_size=0.2):
+    ds = Dataset("lr-example1.data")
+
     if regul:
-        lrmodel = LinearRegression(ds, True, True, 10.0) 
+        lrmodel = LinearRegression(ds, True, True, 10.0)
     else:
         lrmodel = LinearRegression(ds)
 
-    lrmodel.plotData_2vars("Population", "Profit")    
+    lrmodel.plotData_2vars("Population", "Profit")
 
-    input("Press a key")
-    
+    lrmodel.splitData(test_size=test_size)
+
     print("Cost function value for theta with zeros:")
     print(lrmodel.costFunction())
 
     print("Model with analytical solution")
-    lrmodel.buildModel()  
-    
+    lrmodel.buildModel()
+
     print("Cost function value for theta from analytical solution:")
     print(lrmodel.costFunction())
     # 4.477
     print("Coefficients from analytical solution")
     lrmodel.printCoefs()
-    # -3.896 1.193
-    lrmodel.plotDataAndModel("Population", "Profit")   
-    input("Press a key")    
-    
+    lrmodel.plotDataAndModel("Population", "Profit")
+
     print("Gradient descent:")
     lrmodel.gradientDescent(1500, 0.01)
     print("Cost function value for theta from gradient descent:")
     print(lrmodel.costFunction())
     print("Coefficients from gradient descent")
     lrmodel.printCoefs()
-    
-    lrmodel.plotDataAndModel("Population", "Profit") 
-    
-    input("Press a key") 
-    
-    ex = np.array([7.0, 0.0])
-    print("Prediction for example 7:")    
-    print(lrmodel.predict(ex))
-    
 
-def test_multivar():
+    lrmodel.plotDataAndModel("Population", "Profit")
+
+    print("Testing model on test data:")
+    y_pred = []
+    for i in range(lrmodel.X_test.shape[0]):
+        y_pred.append(lrmodel.predict(lrmodel.X_test[i]))
+    y_pred = np.array(y_pred)
+    mse = np.mean((y_pred - lrmodel.y_test) ** 2)
+    print("Mean squared error on test data: ", mse)
+
+
+def test_multivar(test_size=0.2):
     ds= Dataset("lr-example2.data")   
-    
+
     lrmodel = LinearRegression(ds) 
+
+    lrmodel.splitData(test_size=test_size)
+
     print("Initial cost: (not optimized)", lrmodel.costFunction())
     print()
     
@@ -164,6 +167,14 @@ def test_multivar():
     lrmodel.printCoefs()  
     print("Prediction for example (3000, 3):")
     print(lrmodel.predict(ex))
+
+    print("Testing model on test data:")
+    y_pred = []
+    for i in range(lrmodel.X_test.shape[0]):
+        y_pred.append(lrmodel.predict(lrmodel.X_test[i]))
+    y_pred = np.array(y_pred)
+    mse = np.mean((y_pred - lrmodel.y_test) ** 2)
+    print("Mean squared error on test data: ", mse)
   
 
 def testdataset():
@@ -185,8 +196,9 @@ def testdataset():
 # main - tests
 if __name__ == '__main__': 
     
+    testdataset()
     #test_2var()
     #test_2var(True)
-    test_multivar()
+    #test_multivar()
 
     
