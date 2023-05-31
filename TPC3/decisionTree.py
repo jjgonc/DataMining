@@ -301,7 +301,7 @@ class DecisionTree:
 
     def prune_tree(self, node, X, y, threshold=None):
         '''
-        Função que realiza o pruning da árvore, permitindo reduzir o overfir em modelos de árvores de decisão.
+        Função que realiza o pruning da árvore, permitindo reduzir o overfit em modelos de árvores de decisão.
 
         Se o nó for uma folha, retorna o nó com a classe mais frequente.
         Se o nó não for uma folha, chama a função prune_tree para os filhos da esquerda e da direita do nó.
@@ -331,6 +331,18 @@ class DecisionTree:
     
 
     def pessimisticErrorPrunning(self, node, X, y):
+        """
+        Implementa o algoritmo de poda pessimista de erro para árvores de decisão.
+
+        Parâmetros:
+        node: O nó atual na árvore de decisão.
+        X: As características de entrada para o nó atual.
+        y: Os rótulos correspondentes às características de entrada.
+
+          Retorna:
+        node: O nó da árvore de decisão podado.
+        """
+
         if node is None:
             return None
         if node.left is None and node.right is None:
