@@ -8,7 +8,7 @@
 # Sumário:
 
 ## TPC1 - (Lecture 1)
-- Classe Dataset
+- Class Dataset
 
 ## TPC2 - (Lecture 2)
 Modelos de Feature Selection:
@@ -21,7 +21,7 @@ Modelos de Feature Selection:
 - Decision Trees com post-pruning pessimistic error pruning
 
 ## TPC4 - (Lecture 4)
-- Naive Bayes
+- Guassian Naive Bayes (Text Classification using vectorizer to convert the sentences into a numerical matrix)
 - Prism
 
 ## TPC5 - (Lecture 5)
