@@ -1,88 +1,154 @@
 import numpy as np
-# import pandas as pd
-
 
 class Dataset:
-    def __init__(self, x=None, y=None, feature_names = None, label_names = None):
-        self.x = x
-        self.y = y
-        self.feature_names = feature_names
-        self.label_names = label_names
+    def __init__(self):
+        self.X = None
+        self.y = None
+        self.feature_names = None
+        self.label_name = None
 
-    
     def getX(self):
-        return self.x
+        return self.X
     
     def getY(self):
         return self.y
     
     def getFeatureNames(self):
         return self.feature_names
-        
+    
     def getLabelNames(self):
-        return self.label_names
+        return self.label_name
     
-    def setX(self, x):
-        self.x = x
-    
-    def setY(self, y):
+    def set_data(self, X, y, feature_names, label_name):
+        self.X = X
         self.y = y
-    
-    def setFeatureNames(self, feature_names):
         self.feature_names = feature_names
+        self.label_name = label_name
     
-    def setLabelNames(self, label_names):
-        self.label_names = label_names
+    def get_data(self):
+        return self.X, self.y, self.feature_names, self.label_name
+    
+    def load_from_csv(self, file_path, delimiter=','):
+        data = np.genfromtxt(file_path, delimiter=delimiter, skip_header=1)
+        self._process_data(data)
+        with open(file_path, 'r') as f:
+            header_line = f.readline().strip()
+            self.feature_names = header_line.split(delimiter)[:-1]  # Remove a última coluna (que é a coluna da variável de saída)
+            self.label_name = header_line.split(delimiter)[-1]  # Pega na última coluna (que é a coluna da variável de saída)
 
-    def readDataset(self, filename, sep = ','):
-        data = np.genfromtxt(filename, delimiter=',', skip_header=1, dtype='str')
-        features = np.genfromtxt(filename, delimiter=',', max_rows=1, dtype='str')
-        self.x = data[:, :-1]    # all rows, all columns except the last one
-        self.y = data[:, -1]     # all rows, only the last column
-        self.feature_names = features[:-(len(self.label_names))]
-        self.label_names = features[-(len(self.label_names)) : ]
-
-    def writeDataset(self, filename, sep = ","):
-        fullds = np.hstack( (self.x, self.y.reshape(len(self.y),1)))
-        fullds = np.vstack( (np.append(self.feature_names, self.label_names), fullds))
-        np.savetxt(filename, fullds, fmt="%s", delimiter=',')
-
-    def nullCount(self):
-        return np.sum(np.char.strip(self.x) == '') + np.sum(np.char.strip(self.y) == '')
-
-    def substituteNullWithMean(self):
-        data = self.x
-        marks = np.delete(data, 0, 1)   # remove the first column that contains the student's name
-        marks_asArray = np.zeros((len(marks), len(marks[0])))   # create a new array with the same size as the marks array
-        for l in range(len(marks)):    # transform the marks array into a float array with the missing str values replaced by np.nan
-            for c in range(len(marks[l])):
-                if marks[l][c] == '':
-                    marks_asArray[l][c] = np.nan
-                else:
-                    marks_asArray[l][c] = float(marks[l][c])
-
-        medias = np.round(np.nanmean(marks_asArray, axis=0), decimals=1)  # calculate the mean of each column
-        marks_asArray[np.isnan(marks_asArray)] = np.take(medias, np.isnan(marks_asArray).nonzero()[1])  # replace the np.nan values with the mean of the column
+    def load_from_tsv(self, file_path):
+        data = np.genfromtxt(file_path, delimiter='\t', skip_header=1)
+        self._process_data(data)
+        with open(file_path, 'r') as f:
+            header_line = f.readline().strip()
+            self.feature_names = header_line.split('\t')[:-1]
+            self.label_name = header_line.split('\t')[-1]
+    
+    def _process_data(self, data):
+        self.X = data[:, :-1]
+        self.y = data[:, -1]
+    
+    def describe(self):
+        # Estatísticas descritivas das variáveis de entrada (X)
+        print("Descrição das variáveis de entrada:")
+        print("Média:", np.mean(self.X, axis=0))  # Média
+        print("Desv. Padrão:", np.std(self.X, axis=0))   # Desvio padrão
+        print("Valor Min.:", np.min(self.X, axis=0))   # Valor mínimo
+        print("Valor Max.:", np.max(self.X, axis=0))   # Valor máximo
         
-        marks_asArray = np.hstack((data[:, 0].reshape(len(data), 1), marks_asArray))  # add the student's name to the array
-        self.x = marks_asArray
+        # Estatísticas descritivas da variável de saída (y)
+        print("\nDescrição da variável de saída:")
+        print("Média:", np.mean(self.y))          # Média
+        print("Desv. Padrão:", np.std(self.y))           # Desvio padrão
+        print("Valor Min.:", np.min(self.y))           # Valor mínimo
+        print("Valor Max.:", np.max(self.y))           # Valor máximo
+        print()
 
 
 
+    def count_null_values(self):
+        null_counts = np.sum(np.isnan(self.X), axis=0)
+        print("Contagem de valores nulos nas variáveis de entrada:")
+        print(null_counts)
+    
+    def replace_null_values(self, strategy='most_frequent'):
+        if strategy == 'most_frequent':
+            most_frequent_values = np.nanmedian(self.X, axis=0)
+            self.X = np.where(np.isnan(self.X), most_frequent_values, self.X)
+        elif strategy == 'mean':
+            mean_values = np.nanmean(self.X, axis=0)
+            self.X = np.where(np.isnan(self.X), mean_values, self.X)
 
 
-if __name__ == "__main__":
-    ds = Dataset(label_names=["NotaFinal"])
-    ds.readDataset("notas.csv")
-    print("Dataset lido com sucesso!")
+def main():
+    # Criar uma instância da classe Dataset
+    dataset = Dataset()
 
-    print("\nPrinting feature names...")
-    print(ds.feature_names)
-    print("\nPrinting X...")
-    print(ds.getX())
-    print("\nPrinting Y...")
-    print(ds.getY())
+    # Carregar dados do arquivo CSV
+    dataset.load_from_csv('dataset.csv')
 
-    print("Número de valores nulos: ", ds.nullCount())
-    ds.substituteNullWithMean()
-    ds.writeDataset("output.csv")
+    # Obter os dados
+    X, y, feature_names, label_name = dataset.get_data()
+
+    # Imprimir os dados carregados
+    print("Dados de entrada (X):")
+    print(X)
+    print()
+    print("Dados de saída (y):")
+    print(y)
+    print()
+    print("Nomes das features:")
+    print(feature_names)
+    print()
+    print("Nome da label:")
+    print(label_name)
+    print()
+
+    # Calcular estatísticas descritivas
+    dataset.describe()
+
+    # Contar valores nulos
+    dataset.count_null_values()
+
+    # Substituir valores nulos pelo valor mais comum
+    dataset.replace_null_values(strategy='most_frequent')
+
+    # Verificar os dados atualizados
+    X, _, _, _ = dataset.get_data()
+    print("Dados de entrada após substituição de valores nulos:")
+    print(X)
+
+
+import unittest
+
+class DatasetTest(unittest.TestCase):
+    def setUp(self):
+        self.dataset = Dataset()
+        self.dataset.load_from_csv('dataset.csv')
+        # self.dataset.load_from_csv('dataset.tsv', delimiter='\t')
+
+    def test_data_loading(self):
+        X, y, feature_names, label_name = self.dataset.get_data()
+        self.assertIsNotNone(X)
+        self.assertIsNotNone(y)
+        self.assertIsNotNone(feature_names)
+        self.assertIsNotNone(label_name)
+        self.assertEqual(len(X), 4)
+        self.assertEqual(len(feature_names), 3)
+
+    def test_describe(self):
+        output = self.dataset.describe()
+        # Add assertions based on the expected output
+
+    def test_count_null_values(self):
+        output = self.dataset.count_null_values()
+        # Add assertions based on the expected output
+
+    def test_replace_null_values(self):
+        self.dataset.replace_null_values(strategy='most_frequent')
+        X, _, _, _ = self.dataset.get_data()
+        # Add assertions based on the expected output
+
+if __name__ == '__main__':
+    # unittest.main()
+    main()
