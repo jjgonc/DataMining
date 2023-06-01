@@ -138,29 +138,30 @@ class PRISMClassifier:
 def test():
     # Training data
     X_train = np.array([
-        ['setosa', 'versicolor', 'virginica'],
-        ['versicolor', 'setosa', 'virginica'],
-        ['setosa', 'virginica', 'versicolor'],
-        ['setosa', 'setosa', 'virginica'],
-        ['virginica', 'setosa', 'versicolor'],
-        ['versicolor', 'versicolor', 'setosa'],
-        ['setosa', 'versicolor', 'virginica'],
-        ['setosa', 'setosa', 'virginica'],
-        ['virginica', 'virginica', 'setosa'],
-        ['versicolor', 'setosa', 'virginica']
+        ["Overcast", "Hot", "Normal", "Weak"],
+        ["Overcast", "Mild", "High", "Strong"],
+        ["Sunny", "Mild", "Normal", "Strong"],
+        ["Rain", "Mild", "Normal", "Weak"],
+        ["Sunny", "Cool", "Normal", "Weak"],
+        ["Overcast", "Cool", "Normal", "Strong"],
+        ["Sunny", "Mild", "High", "Weak"],
+        ["Rain", "Cool", "Normal", "Strong"],
+        ["Rain", "Cool", "Normal", "Weak"],
+        ["Rain", "Mild","High","Weak"]
+        #[1, 1, 1, 1],
+        #[0, 0, 0, 0]
     ])
-    y_train = np.array(['class1', 'class2', 'class2', 'class1', 'class2', 'class1', 'class2', 'class1', 'class2', 'class2'])
+    y_train = np.array([0, 0, 0, 0, 0, 0,1,1, 0, 0])
 
     # Test data
     X_test = np.array([
-        ['setosa', 'versicolor', 'virginica'],
-        ['setosa', 'virginica', 'versicolor'],
-        ['versicolor', 'setosa', 'virginica'],
-        ['virginica', 'setosa', 'versicolor'],
-        ['setosa', 'setosa', 'virginica'],
-        ['virginica', 'virginica', 'setosa']
+        ["Overcast", "Cool", "Normal", "Strong"],
+        ["Rain", "Cool", "Normal", "Weak"],
+         ["Sunny", "Mild", "High", "Weak"],
+        ["Rain", "Cool", "Normal", "Strong"],
+        ["Sunny", "Hot","High","Strong"]
     ])
-    y_test = np.array(['class2', 'class2', 'class1', 'class2', 'class1', 'class1'])
+    y_test = np.array([0, 0, 1, 1,1])
 
     prism = PRISMClassifier(max_rules=10)  # Set the maximum number of rules to 10
     prism.fit(X_train, y_train)
