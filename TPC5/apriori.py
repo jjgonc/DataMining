@@ -6,6 +6,10 @@ class TransactionDataset:
         self.transactions = transactions
         self.freq_items = self._find_frequent_items()
 
+    '''
+    Count the occurrences of each item in the transaction dataset (does not use any minsupport)
+    '''
+
     def _find_frequent_items(self):
         counts = {}
         for transaction in self.transactions:
@@ -96,7 +100,7 @@ class AprioriAlgorithm:
                 filteredDict[item] = filtered_candidates[item]
         return filteredDict
 
-    #TODO: Falta ordenar aqui os tuplos do itemset
+
     def printAprioriResults(self):
         """
         Print the results of the Apriori algorithm
@@ -110,7 +114,7 @@ class AprioriAlgorithm:
             print()
 
 
-    def powerset(self, iterable):
+    def powerset(self, iterable):   # this method generates the powerset of a given itemset, which is used to generate the association rules
         s = list(iterable)
         res = chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
         return res
@@ -118,7 +122,7 @@ class AprioriAlgorithm:
     def apriori_association_rules(self, freq_itemsets, min_support, min_confidence):
         # generate association rules
         for itemset in freq_itemsets:
-            print("\n\nitemset: ", itemset)
+            # print("\n\nitemset: ", itemset)
             if isinstance(itemset, int):
                 continue
             for antecedent in self.powerset(itemset):
@@ -129,8 +133,12 @@ class AprioriAlgorithm:
                 support_consequent = freq_itemsets[itemset]
                 confidence = support_consequent / support_antecedent
                 if confidence >= min_confidence:
-                    print("{} -> {}: support = {}, confidence = {}".format(
-                        list(antecedent), list(set(itemset) - set(antecedent)), support_consequent, confidence))
+                    if (list(set(itemset) - set(antecedent))):
+                        print("\n\nitemset: ", itemset)
+                        # print("antecedent: ", antecedent, " | sup_antecedent: ", freq_itemsets[antecedent])
+                        # print("itemset: ", itemset, "sup_itemset: ", freq_itemsets[itemset])
+                        print("{} -> {}: support = {}, confidence = {}".format(
+                            list(antecedent), list(set(itemset) - set(antecedent)), support_consequent, confidence))
 
 
     def associationRules(self, min_confidence, min_support):
