@@ -116,15 +116,15 @@ def load_data():
     vectorizer = CountVectorizer()
 
     # Carregar dados
-    train_sentences = ["a baixa do porto", "o mercado do bolhão é no porto", "a baixa de lisboa","o estadio é em lisboa","a rua de santa catarina fica no porto"]
-    test_sentences = ["a câmara do porto fica no centro do porto", "o casino de lisboa","o hotel do porto","alvalade é em lisboa","aquela loja fica no porto"]
+    train_sentences = ["a baixa do porto", "o mercado do bolhão é no porto", "a baixa de lisboa","o estadio é em lisboa","a rua de santa catarina fica no porto","tenho casa no porto","moro em lisboa","vivo em lisboa", "lisboa é bonita", "o porto é muito bonito", "o meu primo é do porto"]
+    test_sentences = ["a câmara do porto fica no centro do porto", "o casino de lisboa","o hotel do porto","alvalade é em lisboa","aquela loja fica no porto","lisboa tem oceanario","a ponte 25 de abril fica em lisboa","vou ao porto"]
 
     # Ajustar o vetorizador aos dados de treinamento e transformar as frases de treinamento em matriz numérica
     X_train = vectorizer.fit_transform(train_sentences).toarray()  
-    y_train = np.array([0, 0, 1, 1, 0])  # Classes correspondentes às frases de treinamento         
+    y_train = np.array([0, 0, 1, 1, 0,0,1,1,1,0,0])  # Classes correspondentes às frases de treinamento         
     # Transformar as frases de teste em matriz numérica
     X_test = vectorizer.transform(test_sentences).toarray()
-    y_test = np.array([0, 1, 0, 1,0])
+    y_test = np.array([0, 1, 0, 1,0,1,1,0])
  
     return X_train, y_train, X_test, y_test
 
