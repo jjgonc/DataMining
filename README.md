@@ -18,7 +18,7 @@ Modelos de Feature Selection:
 - f_regression: linear regression 
 
 ## TPC3 - (Lecture 3)
-- Decision Trees com post-pruning pessimistic error pruning
+- Decision Trees
 
 ## TPC4 - (Lecture 4)
 - Guassian Naive Bayes (Text Classification using vectorizer to convert the sentences into a numerical matrix)
