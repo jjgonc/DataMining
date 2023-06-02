@@ -57,18 +57,17 @@ class NaiveBayesClassifier:
         Retorna:
         - y_pred (numpy.ndarray): array com as classes preditas das frases de teste.
         """
-        y_pred = []           
+        y_pred = []
         for x in X_train:
             class_prob = []
-            for i, c in enumerate(self.classes):
+            for i in range(len(self.classes)):
                 mean = self.mean[i]
                 var = self.variance[i]
                 eps = 1e-9  # small constant to avoid division by zero
                 prob = np.prod(1 / np.sqrt(2 * np.pi * (var + eps)) * np.exp(-(x - mean)**2 / (2 * (var + eps))))
                 class_prob.append(prob)
             y_pred.append(self.classes[np.argmax(class_prob)])
-        return np.array(y_pred)
-
+        return np.array(y_pred)   
 
 def main():
     '''
