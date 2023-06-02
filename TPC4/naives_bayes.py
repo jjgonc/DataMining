@@ -45,7 +45,7 @@ class NaiveBayesClassifier:
             X_class = X_train[c == y_train]
             self.mean[i, :] = X_class.mean(axis=0)
             self.variance[i, :] = X_class.var(axis=0)
-            self.class_prob[i] = X_class.shape[0] / X_class.shape[0]
+            self.class_prob[i] = X_class.shape[0] / X_train.shape[0] 
 
     def predict(self, X_train):
         """
