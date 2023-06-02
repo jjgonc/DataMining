@@ -168,8 +168,8 @@ def main():
 
     predictions = dt.predict(X_test)
     print("Using criterion:", criterionType)
-    print("Predictions:", predictions)
-    print("Actual:", y_test)
+    # print("Predictions:", predictions)
+    # print("Actual:", y_test)
 
 if __name__ == '__main__':
     main()

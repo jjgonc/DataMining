@@ -1,6 +1,12 @@
 import numpy as np
 from scipy.stats import f_oneway
 
+
+'''
+Aplica a one-way anova para cada feature do dataset e retorna os valores F e p para cada feature
+'''
+
+
 class Dataset:
     def __init__(self):
         self.X = None

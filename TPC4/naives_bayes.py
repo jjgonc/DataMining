@@ -45,7 +45,7 @@ class NaiveBayesClassifier:
             X_class = X_train[c == y_train]
             self.mean[i, :] = X_class.mean(axis=0)
             self.variance[i, :] = X_class.var(axis=0)
-            self.class_prob[i] = X_class.shape[0] / X_class.shape[0]
+            self.class_prob[i] = X_class.shape[0] / X_train.shape[0] 
 
     def predict(self, X_train):
         """
@@ -86,11 +86,9 @@ def main():
     y_test = np.array([0, 0, 1, 1])   
     '''
 
-    # Criar e ajustar o classificador Naive Bayes
     nb = NaiveBayesClassifier()
     nb.fit(X_train, y_train)
 
-    # Prever as classes das frases de teste
     y_pred = nb.predict(X_test)
     
     def accuracy(y_train, y_pred):
@@ -111,16 +109,16 @@ def load_data():
     - X_test (numpy.ndarray): matriz de vetores de palavras de teste.
     - y_test (numpy.ndarray): array com as classes das frases de teste.
     """
-    # Criar um vetorizador para converter as frases em matriz numérica
+    # Criar um vetorizer para converter as frases em matriz numérica
     vectorizer = CountVectorizer()
 
     # Carregar dados
     train_sentences = ["a baixa do porto", "o mercado do bolhão é no porto", "a baixa de lisboa","o estadio é em lisboa","a rua de santa catarina fica no porto","tenho casa no porto","moro em lisboa","vivo em lisboa", "lisboa é bonita", "o porto é muito bonito", "o meu primo é do porto"]
     test_sentences = ["a câmara do porto fica no centro do porto", "o casino de lisboa","o hotel do porto","alvalade é em lisboa","aquela loja fica no porto","lisboa tem oceanario","a ponte 25 de abril fica em lisboa","vou ao porto"]
 
-    # Ajustar o vetorizador aos dados de treinamento e transformar as frases de treinamento em matriz numérica
+    # Ajustar o vetorizer aos dados de treino e transformar as frases de treino em matriz numérica
     X_train = vectorizer.fit_transform(train_sentences).toarray()  
-    y_train = np.array([0, 0, 1, 1, 0,0,1,1,1,0,0])  # Classes correspondentes às frases de treinamento         
+    y_train = np.array([0, 0, 1, 1, 0,0,1,1,1,0,0])  # Classes correspondentes às frases de treino        
     # Transformar as frases de teste em matriz numérica
     X_test = vectorizer.transform(test_sentences).toarray()
     y_test = np.array([0, 1, 0, 1,0,1,1,0])
