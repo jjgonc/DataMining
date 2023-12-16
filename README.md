@@ -22,7 +22,7 @@ Modelos de Feature Selection:
 
 ## TPC4 - (Lecture 4)
 - Guassian Naive Bayes (Text Classification using vectorizer to convert the sentences into a numerical matrix)
-- Prism
+- Prism ruled based classifier
 
 ## TPC5 - (Lecture 5)
 - Class TransactionDataset
